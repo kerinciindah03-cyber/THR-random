@@ -1,23 +1,55 @@
-const endDate=new Date("2026-03-21")
+// FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyDl33Hku2reyOzIQ5OiXwjKXuelXjtMa40",
+  authDomain: "thr-2026-358f2.firebaseapp.com",
+  databaseURL: "https://thr-2026-358f2-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "thr-2026-358f2",
+  storageBucket: "thr-2026-358f2.firebasestorage.app",
+  messagingSenderId: "746679509287",
+  appId: "1:746679509287:web:16fc31d20c92f9d5164902"
+};
+
+// INIT FIREBASE
+firebase.initializeApp(firebaseConfig)
+
+const db = firebase.database()
+
+const endDate = new Date("2026-03-21")
 
 function normalize(name){
 return name.toLowerCase().replace(/[^a-z]/g,"")
 }
 
-function getSpinData(){
-return JSON.parse(localStorage.getItem("thrSpinData")||"{}")
+// REALTIME WINNER LIST
+db.ref("winners").on("value",(snapshot)=>{
+
+let data=snapshot.val()
+
+let list=document.getElementById("winnerList")
+
+list.innerHTML=""
+
+if(!data) return
+
+for(let id in data){
+
+let row=document.createElement("tr")
+
+row.innerHTML="<td>"+data[id].name+"</td><td>"+data[id].prize+"</td>"
+
+list.appendChild(row)
+
 }
 
-function saveSpinData(data){
-localStorage.setItem("thrSpinData",JSON.stringify(data))
-}
+})
+
+let spinData={}
 
 function getResult(name){
 
-let data=getSpinData()
 let n=normalize(name)
 
-if(!data[n]){
+if(!spinData[n]){
 
 let reward
 
@@ -30,13 +62,15 @@ reward="250K"
 }
 
 else{
+
 let chance=Math.random()
 reward=chance<0.7?"100K":"150K"
+
 }
 
 let zonkSpin=Math.floor(Math.random()*2)
 
-data[n]={
+spinData[n]={
 spin:0,
 reward:reward,
 zonkSpin:zonkSpin
@@ -44,22 +78,19 @@ zonkSpin:zonkSpin
 
 }
 
-if(data[n].spin>=2){
+if(spinData[n].spin>=2){
 return "LIMIT"
 }
 
 let result
 
-if(data[n].spin===data[n].zonkSpin){
+if(spinData[n].spin===spinData[n].zonkSpin){
 result="ZONK"
-}
-else{
-result=data[n].reward
+}else{
+result=spinData[n].reward
 }
 
-data[n].spin++
-
-saveSpinData(data)
+spinData[n].spin++
 
 return result
 }
@@ -81,14 +112,18 @@ return
 let prize=getResult(name)
 
 if(prize==="LIMIT"){
+
 document.getElementById("result").innerText="Kesempatan sudah habis (2x)"
 return
+
 }
 
 box.classList.add("open")
 
 setTimeout(()=>{
+
 box.classList.remove("open")
+
 },400)
 
 let result=document.getElementById("result")
@@ -116,54 +151,27 @@ greeting.innerText="Kami keluarga di perantauan mengucapkan Selamat Hari Raya Id
 
 },300)
 
-saveWinner(name,prize)
+if(prize!=="ZONK"){
 
-renderWinners()
-
-}
-
-function saveWinner(name,prize){
-
-let winners=JSON.parse(localStorage.getItem("thrWinners")||"[]")
-
-winners.push({name,prize})
-
-localStorage.setItem("thrWinners",JSON.stringify(winners))
-
-}
-
-function renderWinners(){
-
-let winners=JSON.parse(localStorage.getItem("thrWinners")||"[]")
-
-let list=document.getElementById("winnerList")
-
-list.innerHTML=""
-
-winners.forEach(w=>{
-
-let row=document.createElement("tr")
-
-row.innerHTML="<td>"+w.name+"</td><td>"+w.prize+"</td>"
-
-list.appendChild(row)
-
+db.ref("winners").push({
+name:name,
+prize:prize
 })
 
 }
 
+}
+
+// RESET DATABASE
 function resetData(){
 
 let code=prompt("Masukkan kode reset")
 
 if(code==="lahLUP00"){
 
-localStorage.removeItem("thrWinners")
-localStorage.removeItem("thrSpinData")
+db.ref("winners").remove()
 
 alert("Data berhasil di reset")
-
-location.reload()
 
 }else{
 
@@ -172,5 +180,3 @@ alert("Kode salah")
 }
 
 }
-
-renderWinners()
