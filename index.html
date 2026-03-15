@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Random THR 2026</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Family Mart</h1>
+<h2>Random THR 2026</h2>
+<div class="divider"></div>
+
+<input type="text" id="playerName" placeholder="Masukkan Nama">
+
+<div class="box-area">
+
+<div class="box" onclick="openBox(this)">🎁</div>
+<div class="box" onclick="openBox(this)">🎁</div>
+
+</div>
+
+<div id="result"></div>
+
+<div id="greeting"></div>
+
+<h3>Daftar Pemenang</h3>
+
+<table>
+
+<thead>
+<tr>
+<th>Nama</th>
+<th>Hadiah</th>
+</tr>
+</thead>
+
+<tbody id="winnerList"></tbody>
+
+</table>
+
+<button class="resetBtn" onclick="resetData()">RESET DATA</button>
+
+<div class="footer">
+© 2026 Random THR Event<br>
+Owner & Developer : <b>EGA</b><br>
+All Rights Reserved
+</div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
