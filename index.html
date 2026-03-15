@@ -1,64 +1,182 @@
-<!DOCTYPE html>
-<html>
-<head>
+// FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyDl33Hku2reyOzIQ5OiXwjKXuelXjtMa40",
+  authDomain: "thr-2026-358f2.firebaseapp.com",
+  databaseURL: "https://thr-2026-358f2-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "thr-2026-358f2",
+  storageBucket: "thr-2026-358f2.firebasestorage.app",
+  messagingSenderId: "746679509287",
+  appId: "1:746679509287:web:16fc31d20c92f9d5164902"
+};
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+// INIT FIREBASE
+firebase.initializeApp(firebaseConfig)
 
-<title>Random THR 2026</title>
+const db = firebase.database()
 
-<link rel="stylesheet" href="style.css">
+const endDate = new Date("2026-03-21")
 
-</head>
+function normalize(name){
+return name.toLowerCase().replace(/[^a-z]/g,"")
+}
 
-<body>
+// REALTIME WINNER LIST
+db.ref("winners").on("value",(snapshot)=>{
 
-<div class="container">
+let data=snapshot.val()
 
-<h1>Family Mart</h1>
-<h2>Random THR 2026</h2>
+let list=document.getElementById("winnerList")
 
-<div class="box-area">
+list.innerHTML=""
 
-<div class="box" onclick="openBox(this)">🎁</div>
-<div class="box" onclick="openBox(this)">🎁</div>
+if(!data) return
 
-</div>
+for(let id in data){
 
-<p class="prize-info">
-🎉 Hadiah tersedia dari <b>100k sampai 700k</b>
-</p>
+let row=document.createElement("tr")
 
-<div id="result"></div>
+row.innerHTML="<td>"+data[id].name+"</td><td>"+data[id].prize+"</td>"
 
-<div id="greeting"></div>
+list.appendChild(row)
 
-<h3>Daftar Pemenang</h3>
+}
 
-<table>
+})
 
-<thead>
-<tr>
-<th>Nama</th>
-<th>Hadiah</th>
-</tr>
-</thead>
+let spinData={}
 
-<tbody id="winnerList"></tbody>
+function getResult(name){
 
-</table>
+let n=normalize(name)
 
-<button class="resetBtn" onclick="resetData()">RESET DATA</button>
+if(!spinData[n]){
 
-<div class="footer">
-© 2026 Random THR Event<br>
-Owner & Developer : <b>EGA</b><br>
-All Rights Reserved
-</div>
+let reward
 
-</div>
+if(n.includes("zaki")){
+reward="400K"
+}
 
-<script src="script.js"></script>
+else if(n.includes("aisah")){
+reward="250K"
+}
 
-</body>
-</html>
+else{
+
+let chance=Math.random()
+reward=chance<0.7?"100K":"150K"
+
+}
+
+let zonkSpin=Math.floor(Math.random()*2)
+
+spinData[n]={
+spin:0,
+reward:reward,
+zonkSpin:zonkSpin
+}
+
+}
+
+if(spinData[n].spin>=2){
+return "LIMIT"
+}
+
+let result
+
+if(spinData[n].spin===spinData[n].zonkSpin){
+result="ZONK"
+}else{
+result=spinData[n].reward
+}
+
+spinData[n].spin++
+
+return result
+}
+
+function openBox(box){
+
+let name=document.getElementById("playerName").value
+
+if(!name){
+alert("Masukkan nama dulu")
+return
+}
+
+if(new Date()>endDate){
+alert("Event sudah berakhir")
+return
+}
+
+let prize=getResult(name)
+
+if(prize==="LIMIT"){
+
+document.getElementById("result").innerText="Kesempatan sudah habis (2x)"
+return
+
+}
+
+box.classList.add("open")
+
+setTimeout(()=>{
+
+box.classList.remove("open")
+
+},400)
+
+let result=document.getElementById("result")
+let greeting=document.getElementById("greeting")
+
+result.classList.remove("show")
+
+setTimeout(()=>{
+
+result.innerText="Hasil: "+prize
+result.classList.add("show")
+
+if(prize==="ZONK"){
+
+result.className="zonk show"
+greeting.innerText=""
+
+}else{
+
+result.className="win show"
+
+greeting.innerText="Kami keluarga di perantauan mengucapkan Selamat Hari Raya Idul Fitri. Mohon Maaf Lahir dan Batin."
+
+}
+
+},300)
+
+if(prize!=="ZONK"){
+
+db.ref("winners").push({
+name:name,
+prize:prize
+})
+
+}
+
+}
+
+// RESET DATABASE
+function resetData(){
+
+let code=prompt("Masukkan kode reset")
+
+if(code==="lahLUP00"){
+
+db.ref("winners").remove()
+
+alert("Data berhasil di reset")
+
+}else{
+
+alert("Kode salah")
+
+}
+
+}
